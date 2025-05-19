@@ -1,108 +1,86 @@
-# Event RSVP System 🇰🇪
+📄 Event RSVP System – Admin Email Inviter
+This system is designed to manage bulk guest invitations for events. Admins can upload guest lists, send email invitations, monitor RSVP responses, and export data. Built with PHP and MySQL for simplicity, it handles over 500,000 guests, ensuring scalability, security, and a smooth user experience for both administrators and invitees.
 
-A PHP & MySQL-based RSVP management system for large-scale events in Kenya. This system enables admins to upload guest lists, send bulk email invitations, track RSVP responses, and export attendance data — all through a user-friendly admin panel.
+📐 System Design
+1. Architecture Overview
+Frontend: Responsive Bootstrap 5 interface for admin users.
 
----
+Backend: PHP handles form logic, database access, and mailing.
 
-## 📐 System Design
+Database: MySQL stores guest details, RSVP statuses, and email logs.
 
-### 🔑 Core Features
-- Upload CSV guest lists (name, email).
-- Bulk invitation via email (PHPMailer integration).
-- Personalized RSVP links with guest-specific tracking.
-- Admin dashboard with RSVP stats and logs.
-- Export data as CSV for reports.
-- Resend failed or pending invitations.
-- Multiple admin user support.
+Mailer: PHPMailer with SMTP integration for scalable email delivery.
 
-### 📊 Database Design (MySQL)
-- `guests`: Stores guest info.
-- `email_logs`: Tracks email delivery status.
-- `rsvp_responses`: Logs RSVP actions (attending or not).
-- `admins`: Handles admin authentication.
+RSVP Flow: Each invite contains a unique link tied to the guest's ID.
 
----
+2. Database Structure
+Tables:
+guests – stores name, email, and RSVP response.
 
-## 💻 Technology Choices
+email_logs – tracks sent invitations with guest_id and timestamp.
 
-| Tech         | Why It Was Chosen |
-|--------------|-------------------|
-| **PHP**      | Widely used, server-side scripting language ideal for form processing and email integration. |
-| **MySQL**    | Reliable and scalable database solution — commonly used in Kenyan SMEs and institutions. |
-| **PHPMailer**| Robust mail-sending library, simplifies SMTP setup and HTML email formatting. |
-| **HTML/CSS** | Lightweight UI — enhanced with responsiveness for mobile and desktop. |
-| **Vanilla JS** (planned) | To improve form feedback, loading states, and interactivity (e.g., AJAX RSVP feedback). |
+admins – handles login credentials and roles.
 
----
+3. Email Logic
+Sends up to 50 unsent invites per batch to avoid timeouts.
 
-## ⚖️ Key Trade-offs
+Skips guests already in email_logs.
 
-| Decision | Reason | Trade-off |
-|---------|--------|-----------|
-| **PHP (vs Laravel)** | Simple hosting, easier to set up for local devs and SMEs. | Miss out on MVC structure and inbuilt security tools of Laravel. |
-| **MySQL** | Well-supported and easy to host in Kenya. | Slightly less performant than NoSQL for massive concurrent loads. |
-| **Basic UI (vs React or Bootstrap)** | Focused on functional delivery over polish, with plans for future UX upgrades. | UI is minimal; advanced UI/UX features are limited for now. |
-| **SMTP over third-party APIs** | More control and no external email costs. | May require proper mail server configuration and testing. |
+Generates a unique RSVP link using the guest ID.
 
----
+💻 Technology Choices
+Component	Technology	Justification
+Frontend UI	Bootstrap 5	Ensures mobile-first responsive UI with minimal custom CSS.
+Backend	PHP (7.x/8.x)	Widely supported on most Kenyan hosting platforms; simple to deploy.
+Database	MySQL	Reliable RDBMS for structured data and joins.
+Mailer	PHPMailer + SMTP	Easy to integrate, supports Kenyan SMTP providers and Gmail.
+Server	Apache / Nginx	Runs on common LAMP stacks used by local providers like Safaricom Cloud or Truehost.
 
-## 🚀 How to Run Locally
+⚖️ Key Trade-offs
+Trade-Off	Decision	Reason
+Ease of Deployment vs Modern Frameworks	Chose PHP over Laravel/Node.js	Pure PHP runs on low-cost shared hosting (common in Kenya), no need for CLI-based deployment.
+Batch Size	Sends 50 emails at a time	Balances performance and server timeout limits. Can be changed based on server specs.
+Security	Simple session-based login	Avoids complex OAuth setup; good for internal admin use.
+Speed vs Logging	Logs each sent invite in DB	Prioritizes tracking and avoids duplicate emails, even though it adds DB overhead.
 
-### ✅ Requirements
-- PHP 7.4+ (with `openssl`, `pdo_mysql`)
-- MySQL/MariaDB
-- Apache/Nginx
-- Composer (for PHPMailer)
+✅ Features Summary
+Admin authentication.
 
-### 📦 Setup
+Upload guest list (CSV).
 
-bash
-git clone https://github.com/yourusername/event-rsvp-kenya.git
-cd event-rsvp-kenya
+Send bulk email invites with RSVP links.
 
-# Install dependencies
-composer install
+Avoid duplicate invites using logs.
 
-# Setup your database
-1. Create a MySQL DB: `event_rsvp`
-2. Import `/database/schema.sql`
+Export RSVP data (e.g., to Excel).
 
-# Configure DB and SMTP in `config/db.php`
+Clean mobile-friendly UI.
 
-# Start server (for testing)
-php -S localhost:8000
+🚀 Deployment Notes
+Edit the SMTP credentials in send_invites.php:
 
-🔐 Admin Login
-Default credentials can be set during admin creation or directly in the DB.
-
-Passwords are hashed using password_hash() for security.
-
-📤 Email Configuration
-Update the SMTP details in send_invites.php:
+php
+Copy
+Edit
 $mail->Host = 'smtp.yourdomain.co.ke';
 $mail->Username = 'your_email@yourdomain.co.ke';
 $mail->Password = 'your_password';
-event-rsvp-kenya/
-├── config/
-│   └── db.php
-├── rsvp/
-│   └── index.php (guest RSVP form)
-├── admin/
-│   ├── index.php (dashboard)
-│   ├── send_invites.php
-│   ├── upload_guests.php
-│   ├── export_data.php
-│   ├── resend_invites.php
-│   └── create_admin.php
-├── database/
-│   └── schema.sql
-├── vendor/
-│   └── PHPMailer (via Composer)
-├── README.md
+Upload on a PHP-supporting web host (e.g., Truehost Kenya, Safaricom Web Hosting).
 
+Make sure PHPMailer is installed via Composer or included manually.
 
-🙌 Credits
-Developed by a 4th year BBIT student ###Johnbosco kisilu muet, with real-world application in Kenyan corporate and campus events.
+📊 Scalability Plans
+If traffic increases or guests exceed 1 million:
 
-📜 License
-MIT License — free to use, improve, and contribute!
+Switch to Laravel Queue or Cron Jobs for email batching.
+
+Move MySQL to a cloud-managed DB (e.g., DigitalOcean, GCP).
+
+Add caching with Redis or Memcached.
+
+Load balance using Nginx + PHP-FPM behind a CDN like Cloudflare.
+
+👨🏽‍💻 Maintainer
+Developed for the SpinMobile Coding/System Design Challenge
+Deadline: 3rd June 2025 – Prepared by a BBIT 3rd Year Student with real-world Kenya-based deployment in mind.
+
